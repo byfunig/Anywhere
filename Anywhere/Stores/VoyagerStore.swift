@@ -29,12 +29,13 @@ final class VoyagerStore {
     @ObservationIgnored private var updatesTask: Task<Void, Never>?
 
     private init() {
-        isMember = AWCore.getVoyagerMembership()
-        updatesTask = listenForTransactions()
-        Task {
-            await loadProduct()
-            await refreshEntitlement()
-        }
+        isMember = true
+        AWCore.getVoyagerMembership()
+        // updatesTask = listenForTransactions()
+        // Task {
+        //     await loadProduct()
+        //     await refreshEntitlement()
+        // }
     }
 
     deinit {
@@ -62,8 +63,8 @@ final class VoyagerStore {
     }
     
     private func setMember(_ value: Bool) {
-        isMember = value
-        AWCore.setVoyagerMembership(value)
+        isMember = true
+        AWCore.setVoyagerMembership(true)
     }
     
     func verificationToken() async -> String? {
@@ -81,24 +82,29 @@ final class VoyagerStore {
     
     @discardableResult
     func purchase() async throws -> Bool {
-        if product == nil { await loadProduct() }
-        guard let product else { throw StoreError.productUnavailable }
+        // 伪装购买成功并返回
+        setMember(true)
+        isPresentingVoyagerView = false // 如果有弹窗，直接关闭
+        return true
+        
+        // if product == nil { await loadProduct() }
+        // guard let product else { throw StoreError.productUnavailable }
 
-        purchaseInFlight = true
-        defer { purchaseInFlight = false }
+        // purchaseInFlight = true
+        // defer { purchaseInFlight = false }
 
-        let result = try await product.purchase()
-        switch result {
-        case .success(let verification):
-            let transaction = try checkVerified(verification)
-            await transaction.finish()
-            setMember(true)
-            return true
-        case .userCancelled, .pending:
-            return false
-        @unknown default:
-            return false
-        }
+        // let result = try await product.purchase()
+        // switch result {
+        // case .success(let verification):
+        //     let transaction = try checkVerified(verification)
+        //     await transaction.finish()
+        //     setMember(true)
+        //     return true
+        // case .userCancelled, .pending:
+        //     return false
+        // @unknown default:
+        //     return false
+        // }
     }
 
     // MARK: - Restore
